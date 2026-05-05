@@ -16,7 +16,7 @@ type Config struct {
 	DBSSLMode  string
 }
 
-func load() (*Config, error) {
+func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{

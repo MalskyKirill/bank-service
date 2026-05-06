@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func OpenPostgres(cfg *config.Config) (*sql.DB, error) {

@@ -1,6 +1,7 @@
 package security
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -46,4 +47,43 @@ func (s *JWTService) GenerateToken(userID int64) (string, time.Time, error) {
 	}
 
 	return tokenString, expiresAt, nil
+}
+
+func (s *JWTService) ParceToken(tokenString string) (int64, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		claims,
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+
+			return s.secret, nil
+		},
+	)
+
+	if err != nil {
+		return 0, fmt.Errorf("invalid token: %w", err)
+	}
+
+	if !token.Valid {
+		return 0, fmt.Errorf("invalid token")
+	}
+
+	if claims.UserID != 0 {
+		return claims.UserID, nil
+	}
+
+	if claims.Subject == "" {
+		return 0, fmt.Errorf("token subject is empty")
+	}
+
+	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid token subject, %w", err)
+	}
+
+	return userID, nil
 }

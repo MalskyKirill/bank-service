@@ -42,7 +42,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 	query := `
 		SELECT id, email, username, password_hash, created_at
 		FROM users
-		WHERE id = $1
+		WHERE email = $1
 	`
 
 	var user models.User

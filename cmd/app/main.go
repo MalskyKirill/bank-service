@@ -38,7 +38,7 @@ func main() {
 
 	logger.Info("database schema initialized")
 
-	appRouter := router.NewRouter()
+	appRouter := router.NewRouter(database, cfg, logger)
 
 	server := &http.Server{
 		Addr:         ":" + cfg.ServerPort,

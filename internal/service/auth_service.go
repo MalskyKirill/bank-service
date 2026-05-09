@@ -53,9 +53,13 @@ func (s *AuthService) Registration(ctx context.Context, req dto.RegisterRequest)
 		return nil, apperror.New(http.StatusBadRequest, "password must be at least 8 characters")
 	}
 
-	existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, email)
+	// existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, email)
+	// if err != nil {
+	// 	return nil, apperror.New(http.StatusInternalServerError, "failed to check email")
+	// }
+	existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, apperror.New(http.StatusInternalServerError, "failed to check email")
+		return nil, apperror.New(http.StatusInternalServerError, err.Error())
 	}
 
 	if existindgUserByEmail != nil {
@@ -106,17 +110,17 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*dto.Log
 		return nil, apperror.New(http.StatusBadRequest, "password is required")
 	}
 
-	user, err := s.userRepository.FindByUsername(ctx, email)
+	user, err := s.userRepository.FindByEmail(ctx, email)
 	if err != nil {
 		return nil, apperror.New(http.StatusInternalServerError, "failed to find user")
 	}
 
 	if user == nil {
-		return nil, apperror.New(http.StatusUnauthorized, "invalid email or password")
+		return nil, apperror.New(http.StatusUnauthorized, "1invalid email or password")
 	}
 
 	if !security.CheckPassword(user.PasswordHash, password) {
-		return nil, apperror.New(http.StatusUnauthorized, "invalid email or password")
+		return nil, apperror.New(http.StatusUnauthorized, "2invalid email or password")
 	}
 
 	token, expiresAt, err := s.jwtServicce.GenerateToken(user.ID)

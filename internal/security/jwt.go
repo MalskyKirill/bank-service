@@ -38,7 +38,7 @@ func (s *JWTService) GenerateToken(userID int64) (string, time.Time, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString(s.secret)
 	if err != nil {

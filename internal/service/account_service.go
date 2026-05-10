@@ -36,7 +36,7 @@ func (s *AccountService) CreateAccount(ctx context.Context, userID int64, req dt
 
 	account, err := s.accountRepository.Create(ctx, userID, currency)
 	if err != nil {
-		return nil, apperror.New(http.StatusInternalServerError, "failed to create account")
+		return nil, apperror.New(http.StatusInternalServerError, err.Error())
 	}
 
 	return toAccountResponce(account), nil

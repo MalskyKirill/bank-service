@@ -20,7 +20,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 func (r *AccountRepository) Create(ctx context.Context, userID int64, currency string) (*models.Account, error) {
 	query := `
 		INSERT INTO accounts (user_id, currency)
-		VALUE ($1, $2)
+		VALUES ($1, $2)
 		RETURNING id, user_id, balance, currency, created_at`
 
 	var account models.Account

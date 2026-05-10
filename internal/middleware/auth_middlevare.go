@@ -46,7 +46,7 @@ func AuthMiddleware(jwtService *security.JWTService) func(http.Handler) http.Han
 	}
 }
 
-func userIDFromContext(ctx context.Context) (int64, bool) {
+func UserIDFromContext(ctx context.Context) (int64, bool) {
 	userID, ok := ctx.Value(userIDKey).(int64)
 	return userID, ok
 }

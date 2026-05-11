@@ -15,7 +15,7 @@ type AccountResponse struct {
 }
 
 type MoneyOperationRequest struct {
-	Amount int64 `json:"amount"`
+	Amount float64 `json:"amount"`
 }
 
 type AccountOperationResponse struct {
@@ -24,14 +24,14 @@ type AccountOperationResponse struct {
 }
 
 type TransferRequest struct {
-	FromAccauntID int64   `json:"from_account_id"`
-	ToAccauntID   int64   `json:"to_account_id"`
+	FromAccountID int64   `json:"from_account_id"`
+	ToAccountID   int64   `json:"to_account_id"`
 	Amount        float64 `json:"amount"`
 }
 
 type TransferResponce struct {
-	Message        string  `json:"message"`
-	FromAccauntID  int64   `json:"from_account_id"`
-	ToAccauntID    int64   `json:"to_account_id"`
-	TransferAmount float64 `json:"transfer_amount"`
+	Message        string          `json:"message"`
+	FromAccountID  AccountResponse `json:"from_account_id"`
+	ToAccountID    int64           `json:"to_account_id"`
+	TransferAmount float64         `json:"transfer_amount"`
 }

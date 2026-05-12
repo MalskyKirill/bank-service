@@ -220,7 +220,7 @@ func (r *AccountRepository) findByIDForUpdate(ctx context.Context, tx *sql.Tx, a
 
 	var account models.Account
 
-	err := tx.QueryRowContext(ctx, query, account).Scan(
+	err := tx.QueryRowContext(ctx, query, accountID).Scan(
 		&account.ID,
 		&account.UserID,
 		&account.Balance,
@@ -268,7 +268,7 @@ func (r *AccountRepository) addBalance(ctx context.Context, tx *sql.Tx, accountI
 	query := `
 		UPDATE accounts
 		SET balance = balance + $1
-		WHERE id = $1
+		WHERE id = $2
 		RETURNING id, user_id, balance, currency, created_at
 	`
 
@@ -299,7 +299,7 @@ func (r *AccountRepository) substractBalanse(ctx context.Context, tx *sql.Tx, ac
 
 	var account models.Account
 
-	err := tx.QueryRowContext(ctx, query, account, accountId).Scan(
+	err := tx.QueryRowContext(ctx, query, ammount, accountId).Scan(
 		&account.ID,
 		&account.UserID,
 		&account.Balance,
@@ -320,19 +320,19 @@ func (r *AccountRepository) insertTransaction(
 	userId int64,
 	fromAccountId *int64,
 	toAccountId *int64,
-	ammount float64,
+	amount float64,
 	transactionType string,
 	description string) error {
 
 	query := `
 			INSERT INTO transactions (
-				user_id, from_account_id, to_account_id, ammount, type, status, description
+				user_id, from_account_id, to_account_id, amount, type, status, description
 			)
 			VALUES ($1, $2, $3, $4, $5, 'SUCCESS', $6)
 		`
 
 	_, err := tx.ExecContext(
-		ctx, query, userId, nullableInt64(fromAccountId), nullableInt64(toAccountId), ammount, transactionType, description,
+		ctx, query, userId, nullableInt64(fromAccountId), nullableInt64(toAccountId), amount, transactionType, description,
 	)
 
 	if err != nil {

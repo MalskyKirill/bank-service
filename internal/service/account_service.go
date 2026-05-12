@@ -79,7 +79,7 @@ func (s *AccountService) Deposit(ctx context.Context, userId int64, accountId in
 
 	account, err := s.accountRepository.Deposit(ctx, userId, accountId, req.Amount)
 	if err != nil {
-		return nil, mapAccountRepositotyError(err, "failed to deposit money")
+		return nil, apperror.New(http.StatusInternalServerError, err.Error())
 	}
 
 	return &dto.AccountOperationResponse{
@@ -103,7 +103,7 @@ func (s *AccountService) Withdraw(ctx context.Context, userId int64, accountId i
 
 	account, err := s.accountRepository.Withdraw(ctx, userId, accountId, req.Amount)
 	if err != nil {
-		return nil, mapAccountRepositotyError(err, "failed to deposit money")
+		return nil, apperror.New(http.StatusInternalServerError, err.Error())
 	}
 
 	return &dto.AccountOperationResponse{

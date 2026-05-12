@@ -37,5 +37,9 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	authRouter.HandleFunc("/accounts", accountHandler.CreateAccount).Methods(http.MethodPost)
 	authRouter.HandleFunc("/accounts", accountHandler.GetAccounts).Methods(http.MethodGet)
 
+	authRouter.HandleFunc("/accounts/{accountId:[0-9]+}/deposit", accountHandler.Deposit).Methods(http.MethodPost)
+	authRouter.HandleFunc("/accounts/{accountId:[0-9]+}/withdraw", accountHandler.Withdraw).Methods(http.MethodPost)
+
+	authRouter.HandleFunc("/transfer", accountHandler.Transfer).Methods(http.MethodPost)
 	return r
 }

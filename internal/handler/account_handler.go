@@ -10,7 +10,9 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,11 +37,7 @@ func (h *AccountHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.CreateAccountRequest
 
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-
-	err := decoder.Decode(&req)
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err := decodeJsonBody(r, &req); err != nil && !errors.Is(err, io.EOF) {
 		response.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
@@ -69,6 +67,86 @@ func (h *AccountHandler) GetAccounts(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, http.StatusOK, result)
 }
 
+func (h *AccountHandler) Deposit(w http.ResponseWriter, r *http.Request) {
+	userId, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	accountId, err := parseAccountId(r)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid account id")
+		return
+	}
+
+	var req dto.MoneyOperationRequest
+
+	if err := decodeJsonBody(r, &req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	result, err := h.accountService.Deposit(r.Context(), userId, accountId, req)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, result)
+}
+
+func (h *AccountHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
+	userId, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	accoundId, err := parseAccountId(r)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid account id")
+		return
+	}
+
+	var req dto.MoneyOperationRequest
+	if err := decodeJsonBody(r, &req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	result, err := h.accountService.Withdraw(r.Context(), userId, accoundId, req)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, result)
+}
+
+func (h *AccountHandler) Transfer(w http.ResponseWriter, r *http.Request) {
+	userId, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	var req dto.TransferRequest
+
+	if err := decodeJsonBody(r, &req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	result, err := h.accountService.Transfer(r.Context(), userId, req)
+	if err != nil {
+		h.handleError(w, err)
+		return
+	}
+
+	response.WriteJSON(w, http.StatusOK, result)
+}
+
 func (h *AccountHandler) handleError(w http.ResponseWriter, err error) {
 	var appError *apperror.AppError
 
@@ -80,4 +158,30 @@ func (h *AccountHandler) handleError(w http.ResponseWriter, err error) {
 	h.logger.Errorf("unexpected account error: %v", err)
 
 	response.WriteError(w, http.StatusInternalServerError, "internal server error")
+}
+
+func parseAccountId(r *http.Request) (int64, error) {
+	vars := mux.Vars(r)
+	accountIdRaws := vars["accountId"]
+	if accountIdRaws == "" {
+		return 0, errors.New("account id is empty")
+	}
+
+	accountId, err := strconv.ParseInt(accountIdRaws, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	if accountId <= 0 {
+		return 0, errors.New("account id must be positive")
+	}
+
+	return accountId, nil
+}
+
+func decodeJsonBody(r *http.Request, target any) error {
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	return decoder.Decode(target)
 }

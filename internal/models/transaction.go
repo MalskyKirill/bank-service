@@ -11,5 +11,5 @@ type Transaction struct {
 	Type          string
 	Status        string
 	Description   *string
-	CreateAt      time.Time
+	CreatedAt     time.Time
 }

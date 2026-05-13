@@ -10,6 +10,6 @@ type TransactionResponse struct {
 	Amount        float64   `json:"amount"`
 	Type          string    `json:"type"`
 	Status        string    `json:"status"`
-	Discription   *string   `json:"description"`
+	Description   *string   `json:"description"`
 	CreatedAt     time.Time `json:"created_at"`
 }

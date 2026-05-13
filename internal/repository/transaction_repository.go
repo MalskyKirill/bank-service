@@ -113,7 +113,7 @@ func scanTransactions(rows *sql.Rows) ([]models.Transaction, error) {
 			&transaction.Type,
 			&transaction.Status,
 			&description,
-			&transaction.CreateAt,
+			&transaction.CreatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("falied to scan transaction, %w", err)

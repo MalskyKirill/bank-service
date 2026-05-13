@@ -49,7 +49,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Info("server started on port %s", cfg.ServerPort)
+		logger.Infof("server started on port %s", cfg.ServerPort)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatalf("server error: %v", err)

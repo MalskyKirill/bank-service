@@ -30,13 +30,13 @@ func (r *TransactionRepository) FindAllByUserId(ctx context.Context, userId int6
 			t.description,
 			t.created_at
 		FROM transactions as t
-		WHERE t.user_id = $1 OR t.from_account_id IN (SELECT id FROM accounts WHERE user_id = $1) OR t.to_account_id IN (SELECT id FROM accounts WHERE user_id = 1$)
+		WHERE t.user_id = $1 OR t.from_account_id IN (SELECT id FROM accounts WHERE user_id = $1) OR t.to_account_id IN (SELECT id FROM accounts WHERE user_id = $1)
 		ORDER BY t.created_at DESC, t.id DESC
 		`
 
 	rows, err := r.db.QueryContext(ctx, query, userId)
 	if err != nil {
-		return nil, fmt.Errorf("filed to find transactions, %w", err)
+		return nil, fmt.Errorf("failed to find transactions, %w", err)
 	}
 	defer rows.Close()
 
@@ -66,7 +66,7 @@ func (r *TransactionRepository) FindByAccountId(ctx context.Context, userId int6
 
 	rows, err := r.db.QueryContext(ctx, query, accountId)
 	if err != nil {
-		return nil, fmt.Errorf("filed to account transactions, %w", err)
+		return nil, fmt.Errorf("failed to account transactions, %w", err)
 	}
 	defer rows.Close()
 
@@ -84,7 +84,7 @@ func (r *TransactionRepository) ensureAccountBelongsToUser(ctx context.Context, 
 	}
 
 	if err != nil {
-		return fmt.Errorf("filed to check account owner, %w", err)
+		return fmt.Errorf("failed to check account owner, %w", err)
 	}
 
 	if ownerId != userId {

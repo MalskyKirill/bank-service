@@ -33,6 +33,7 @@ func (h *TransactionHandler) GetUserTransactions(w http.ResponseWriter, r *http.
 	result, err := h.transactionService.GetUserTransactions(r.Context(), userId)
 	if err != nil {
 		h.handleError(w, err)
+		return
 	}
 
 	response.WriteJSON(w, http.StatusOK, result)
@@ -48,6 +49,7 @@ func (h *TransactionHandler) GetAccountTransactions(w http.ResponseWriter, r *ht
 	accountId, err := parseAccountId(r)
 	if err != nil {
 		response.WriteError(w, http.StatusBadRequest, "invalid account id")
+		return
 	}
 
 	result, err := h.transactionService.GetAccountTransactions(r.Context(), userId, accountId)

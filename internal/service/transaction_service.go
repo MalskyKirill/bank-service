@@ -20,7 +20,7 @@ func NewTransactionService(transactionRepository *repository.TransactionReposito
 	}
 }
 
-func (s *TransactionService) GetUserTransactions(ctx context.Context, userId int64, accountId int64) ([]dto.TransactionResponse, error) {
+func (s *TransactionService) GetUserTransactions(ctx context.Context, userId int64) ([]dto.TransactionResponse, error) {
 	if userId <= 0 {
 		return nil, apperror.New(http.StatusUnauthorized, "unathorized")
 	}

@@ -16,7 +16,7 @@ type Credit struct {
 
 type PaymentSchedule struct {
 	ID              int64
-	CredinID        int64
+	CreditID        int64
 	PaymentDate     time.Time
 	Amount          float64
 	PrincipalAmount float64

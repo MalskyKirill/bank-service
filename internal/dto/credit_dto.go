@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type CreateCreditRequest struct {
-	AccountId  int64   `json:"account_id"`
+	AccountID  int64   `json:"account_id"`
 	Amount     float64 `json:"amount"`
 	TermMonths int     `json:"term_months"`
 }
@@ -20,7 +20,7 @@ type CreditResponse struct {
 	CreatedAt      time.Time `json:"created_at"`
 }
 
-type PaymentSheduleResponse struct {
+type PaymentScheduleResponse struct {
 	ID              int64      `json:"id"`
 	CreditID        int64      `json:"credit_id"`
 	PaymentDate     time.Time  `json:"payment_date"`
@@ -33,6 +33,6 @@ type PaymentSheduleResponse struct {
 }
 
 type CreateCreditResponse struct {
-	Credit  CreditResponse           `json:"credit"`
-	Shedule []PaymentSheduleResponse `json:"shedule"`
+	Credit   CreditResponse            `json:"credit"`
+	Schedule []PaymentScheduleResponse `json:"shedule"`
 }

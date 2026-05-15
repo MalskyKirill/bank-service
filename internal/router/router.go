@@ -39,6 +39,10 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	cardService := service.NewCardService(cardRepository, cfg.HMACSecret)
 	cardHandler := handler.NewCardHandler(cardService, logger)
 
+	creditRepository := repository.NewCreditRepository(database)
+	creditService := service.NewCreditService(creditRepository)
+	creditHandler := handler.NewCreditHandler(creditService, logger)
+
 	authRouter := r.PathPrefix("/").Subrouter()
 	authRouter.Use(middleware.AuthMiddleware(jwtService))
 
@@ -57,6 +61,11 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	authRouter.HandleFunc("/cards", cardHandler.GetCards).Methods(http.MethodGet)
 	authRouter.HandleFunc("/cards/{cardId:[0-9]+}", cardHandler.GetCard).Methods(http.MethodGet)
 	authRouter.HandleFunc("/cards/{cardId:[0-9]+}/pay", cardHandler.Pay).Methods(http.MethodPost)
+
+	authRouter.HandleFunc("/credits", creditHandler.CreateCredit).Methods(http.MethodPost)
+	authRouter.HandleFunc("/credits", creditHandler.GetCredits).Methods(http.MethodGet)
+	authRouter.HandleFunc("/credits/{creditId:[0-9]+}", creditHandler.GetCredit).Methods(http.MethodGet)
+	authRouter.HandleFunc("/credits/{creditId:[0-9]+}/schedule", creditHandler.GetCreditSchedule).Methods(http.MethodGet)
 
 	return r
 }

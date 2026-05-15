@@ -19,6 +19,9 @@ type Config struct {
 
 	JWTSecret   string
 	JWTTTLHours int
+
+	HMACSecret string
+	PGPSecret  string
 }
 
 func Load() (*Config, error) {
@@ -40,6 +43,9 @@ func Load() (*Config, error) {
 
 		JWTSecret:   getEnv("JWT_SECRET"),
 		JWTTTLHours: jwtTTLHours,
+
+		HMACSecret: getEnv("HMAC_SECRET"),
+		PGPSecret:  getEnv("PGP_SECRET"),
 	}
 
 	return cfg, nil

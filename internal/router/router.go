@@ -35,6 +35,10 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	transactionService := service.NewTransactionService(transactionRepository)
 	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
 
+	cardRepository := repository.NewCardRepository(database, cfg.PGPSecret)
+	cardService := service.NewCardService(cardRepository, cfg.HMACSecret)
+	cardHandler := handler.NewCardHandler(cardService, logger)
+
 	authRouter := r.PathPrefix("/").Subrouter()
 	authRouter.Use(middleware.AuthMiddleware(jwtService))
 
@@ -48,6 +52,11 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 
 	authRouter.HandleFunc("/transactions", transactionHandler.GetUserTransactions).Methods(http.MethodGet)
 	authRouter.HandleFunc("/accounts/{accountId:[0-9]+}/transactions", transactionHandler.GetAccountTransactions).Methods(http.MethodGet)
+
+	authRouter.HandleFunc("/cards", cardHandler.CreateCard).Methods(http.MethodPost)
+	authRouter.HandleFunc("/cards", cardHandler.GetCards).Methods(http.MethodGet)
+	authRouter.HandleFunc("/cards/{cardId:[0-9]+}", cardHandler.GetCard).Methods(http.MethodGet)
+	authRouter.HandleFunc("/cards/{cardId:[0-9]+}/pay", cardHandler.Pay).Methods(http.MethodPost)
 
 	return r
 }

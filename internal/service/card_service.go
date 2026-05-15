@@ -39,7 +39,7 @@ func (s *CardService) CreateCard(ctx context.Context, userId int64, req dto.Crea
 
 	number, err := security.GenerateCardNumber()
 	if err != nil {
-		return nil, apperror.New(http.StatusInternalServerError, "failed to genereate card nember")
+		return nil, apperror.New(http.StatusInternalServerError, "failed to generate card number")
 	}
 
 	expiry := security.GenerateCardExpiry()
@@ -77,6 +77,35 @@ func (s *CardService) CreateCard(ctx context.Context, userId int64, req dto.Crea
 		CVV:       cvv,
 		CreatedAt: card.CreatedAt,
 	}, nil
+}
+
+func (s *CardService) GetUserCards(ctx context.Context, userId int64) (*[]dto.CardResponse, error) {
+	if userId <= 0 {
+		return nil, apperror.New(http.StatusUnauthorized, "unauthorized")
+	}
+
+	cards, err := s.cardRepository.FindAllByUserId(ctx, userId)
+	if err != nil {
+		return nil, apperror.New(http.StatusInternalServerError, "failed to get cards")
+	}
+
+	response := make([]dto.CardResponse, 0, len(cards))
+
+	for _, card := range cards {
+		if !security.VerifyHMAC(card.Number, card.NumberHMAC, s.hmacSecret) {
+			return nil, apperror.New(http.StatusInternalServerError, "card data integrity check failed")
+		}
+
+		response = append(response, dto.CardResponse{
+			ID:        card.ID,
+			AccountId: card.AccountID,
+			Number:    security.MaskCardNumber(card.Number),
+			Expiry:    card.Expiry,
+			CreatedAt: card.CreatedAt,
+		})
+	}
+
+	return &response, nil
 }
 
 func (s *CardService) GetCard(ctx context.Context, userId int64, cardId int64) (*dto.CardResponse, error) {
@@ -134,7 +163,7 @@ func (s *CardService) Pay(ctx context.Context, userId int64, cardId int64, req d
 	}
 
 	return &dto.CardPaymentResponse{
-		Message: "card payment complited successfully",
+		Message: "card payment completed successfully",
 		CardId:  cardId,
 		Amount:  req.Amount,
 		Account: *toAccountResponse(account),

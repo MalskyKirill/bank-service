@@ -10,6 +10,8 @@ import (
 	"database/sql"
 	"net/http"
 
+	cbrintegration "bank-service/internal/integration/cbr"
+
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
@@ -40,7 +42,14 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	cardHandler := handler.NewCardHandler(cardService, logger)
 
 	creditRepository := repository.NewCreditRepository(database)
-	creditService := service.NewCreditService(creditRepository)
+
+	cbrClient := cbrintegration.NewClient(
+		cfg.CBRURL,
+		cfg.CBRRateMargin,
+		cfg.CBRLookbackDays,
+	)
+
+	creditService := service.NewCreditService(creditRepository, cbrClient)
 	creditHandler := handler.NewCreditHandler(creditService, logger)
 
 	authRouter := r.PathPrefix("/").Subrouter()

@@ -381,7 +381,7 @@ func (r *CreditRepository) insertCredit(
 func (r *CreditRepository) addCreditAmountToAccount(ctx context.Context, tx *sql.Tx, accountId int64, amount float64) error {
 	query := `
 		UPDATE accounts
-		SET balanse = balanse + $1
+		SET balance = balance + $1
 		WHERE id = $2
 	`
 

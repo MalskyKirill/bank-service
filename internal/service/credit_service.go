@@ -13,15 +13,22 @@ import (
 	"bank-service/internal/repository"
 )
 
-const defaultCreditAnnualRate = 20.0
+type CreditRateProvider interface {
+	GetCreditRate(ctx context.Context) (float64, error)
+}
 
 type CreditService struct {
 	creditRepository *repository.CreditRepository
+	rateProvider     CreditRateProvider
 }
 
-func NewCreditService(creditRepository *repository.CreditRepository) *CreditService {
+func NewCreditService(
+	creditRepository *repository.CreditRepository,
+	rateProvider CreditRateProvider,
+) *CreditService {
 	return &CreditService{
 		creditRepository: creditRepository,
+		rateProvider:     rateProvider,
 	}
 }
 
@@ -46,7 +53,11 @@ func (s *CreditService) CreateCredit(ctx context.Context, userId int64, req dto.
 		return nil, apperror.New(http.StatusBadRequest, "term_months must not be greater than 120")
 	}
 
-	interestRate := defaultCreditAnnualRate
+	interestRate, err := s.rateProvider.GetCreditRate(ctx)
+	if err != nil {
+		return nil, apperror.New(http.StatusServiceUnavailable, "failed to get central bank rate")
+	}
+
 	monthlyPayment := calculateAnnuityPayment(req.Amount, interestRate, req.TermMonths)
 
 	schedule, err := generatePaymentSchedule(req.Amount, interestRate, req.TermMonths, monthlyPayment)

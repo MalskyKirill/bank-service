@@ -40,7 +40,7 @@ func (s *AccountService) CreateAccount(ctx context.Context, userID int64, req dt
 		return nil, apperror.New(http.StatusInternalServerError, err.Error())
 	}
 
-	return toAccountResponce(account), nil
+	return toAccountResponse(account), nil
 }
 
 func (s *AccountService) GetUserAccount(ctx context.Context, userID int64) ([]dto.AccountResponse, error) {
@@ -57,7 +57,7 @@ func (s *AccountService) GetUserAccount(ctx context.Context, userID int64) ([]dt
 
 	for _, account := range accounts {
 		accountCopy := account
-		response = append(response, *toAccountResponce(&accountCopy))
+		response = append(response, *toAccountResponse(&accountCopy))
 	}
 
 	return response, nil
@@ -84,7 +84,7 @@ func (s *AccountService) Deposit(ctx context.Context, userId int64, accountId in
 
 	return &dto.AccountOperationResponse{
 		Message: "deposit completed successfully",
-		Account: *toAccountResponce(account),
+		Account: *toAccountResponse(account),
 	}, nil
 }
 
@@ -108,7 +108,7 @@ func (s *AccountService) Withdraw(ctx context.Context, userId int64, accountId i
 
 	return &dto.AccountOperationResponse{
 		Message: "withdraw completed successfully",
-		Account: *toAccountResponce(account),
+		Account: *toAccountResponse(account),
 	}, nil
 }
 
@@ -136,7 +136,7 @@ func (s *AccountService) Transfer(ctx context.Context, userId int64, req dto.Tra
 
 	return &dto.TransferResponce{
 		Message:        "transfer completed successfully",
-		FromAccountID:  *toAccountResponce(account),
+		FromAccountID:  *toAccountResponse(account),
 		ToAccountID:    req.ToAccountID,
 		TransferAmount: req.Amount,
 	}, nil
@@ -162,7 +162,7 @@ func mapAccountRepositotyError(err error, defaultMessage string) error {
 	return apperror.New(http.StatusInternalServerError, defaultMessage)
 }
 
-func toAccountResponce(account *models.Account) *dto.AccountResponse {
+func toAccountResponse(account *models.Account) *dto.AccountResponse {
 	return &dto.AccountResponse{
 		ID:        account.ID,
 		UserID:    account.UserID,

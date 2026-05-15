@@ -28,9 +28,9 @@ type CardPaymentRequest struct {
 	Description string  `json:"description"`
 }
 
-type CardPeymentResponse struct {
+type CardPaymentResponse struct {
 	Message string          `json:"message"`
-	CardId  string          `json:"card_id"`
+	CardId  int64           `json:"card_id"`
 	Amount  float64         `json:"amount"`
 	Account AccountResponse `json:"account"`
 }

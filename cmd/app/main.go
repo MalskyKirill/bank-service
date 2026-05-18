@@ -3,7 +3,10 @@ package main
 import (
 	"bank-service/internal/config"
 	"bank-service/internal/db"
+	"bank-service/internal/repository"
 	"bank-service/internal/router"
+	"bank-service/internal/scheduler"
+	"context"
 	"net/http"
 	"os"
 	"os/signal"
@@ -38,6 +41,25 @@ func main() {
 
 	logger.Info("database schema initialized")
 
+	appCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if cfg.CreditPaymentSchedulerEnabled {
+		creditRepository := repository.NewCreditRepository(database)
+
+		interval := time.Duration(cfg.CreditPaymentSchedulerIntervalHours) * time.Hour
+
+		creditPaymentScheduler := scheduler.NewCreditPaymentScheduler(
+			creditRepository,
+			interval,
+			logger,
+		)
+
+		go creditPaymentScheduler.Start(appCtx)
+	} else {
+		logger.Info("credit payment scheduler is disabled")
+	}
+
 	appRouter := router.NewRouter(database, cfg, logger)
 
 	server := &http.Server{
@@ -61,6 +83,15 @@ func main() {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
+
+	cancel()
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		logger.Errorf("server shutdown error: %v", err)
+	}
 
 	logger.Info("server stopped")
 

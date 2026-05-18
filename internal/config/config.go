@@ -33,6 +33,9 @@ type Config struct {
 	SMTPUser    string
 	SMTPPass    string
 	SMTPFrom    string
+
+	CreditPaymentSchedulerEnabled       bool
+	CreditPaymentSchedulerIntervalHours int
 }
 
 func Load() (*Config, error) {
@@ -63,6 +66,16 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	creditPaymentSchedulerEnabled, err := getEnvAsBool("CREDIT_PAYMENT_SCHEDULER_ENABLED")
+	if err != nil {
+		return nil, err
+	}
+
+	creditPaymentSchedulerIntervalHours, err := getEnvAsInt("CREDIT_PAYMENT_SCHEDULER_INTERVAL_HOURS")
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
 		ServerPort: getEnv("SERVER_PORT"),
 		DBHost:     getEnv("DB_HOST"),
@@ -88,6 +101,9 @@ func Load() (*Config, error) {
 		SMTPUser:    getEnv("SMTP_USER"),
 		SMTPPass:    getEnv("SMTP_PASS"),
 		SMTPFrom:    getEnv("SMTP_FROM"),
+
+		CreditPaymentSchedulerEnabled:       creditPaymentSchedulerEnabled,
+		CreditPaymentSchedulerIntervalHours: creditPaymentSchedulerIntervalHours,
 	}
 
 	return cfg, nil

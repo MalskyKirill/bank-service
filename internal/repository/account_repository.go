@@ -137,7 +137,7 @@ func (r *AccountRepository) Withdraw(ctx context.Context, userId int64, accountI
 		return nil, err
 	}
 
-	if account.ID != userId {
+	if account.UserID != userId {
 		return nil, ErrAccountForbidden
 	}
 

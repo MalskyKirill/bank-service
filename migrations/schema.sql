@@ -1,9 +1,9 @@
-DROP TABLE IF EXISTS payment_schedules;
-DROP TABLE IF EXISTS credits;
-DROP TABLE IF EXISTS transactions;
-DROP TABLE IF EXISTS cards;
-DROP TABLE IF EXISTS accounts;
-DROP TABLE IF EXISTS users;
+-- DROP TABLE IF EXISTS payment_schedules;
+-- DROP TABLE IF EXISTS credits;
+-- DROP TABLE IF EXISTS transactions;
+-- DROP TABLE IF EXISTS cards;
+-- DROP TABLE IF EXISTS accounts;
+-- DROP TABLE IF EXISTS users;
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 

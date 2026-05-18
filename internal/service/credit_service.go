@@ -11,6 +11,8 @@ import (
 	"bank-service/internal/dto"
 	"bank-service/internal/models"
 	"bank-service/internal/repository"
+
+	"github.com/sirupsen/logrus"
 )
 
 type CreditRateProvider interface {
@@ -18,17 +20,26 @@ type CreditRateProvider interface {
 }
 
 type CreditService struct {
-	creditRepository *repository.CreditRepository
-	rateProvider     CreditRateProvider
+	creditRepository    *repository.CreditRepository
+	rateProvider        CreditRateProvider
+	userRepository      *repository.UserRepository
+	notificationService *NotificationService
+	logger              *logrus.Logger
 }
 
 func NewCreditService(
 	creditRepository *repository.CreditRepository,
 	rateProvider CreditRateProvider,
+	userRepository *repository.UserRepository,
+	notificationService *NotificationService,
+	logger *logrus.Logger,
 ) *CreditService {
 	return &CreditService{
-		creditRepository: creditRepository,
-		rateProvider:     rateProvider,
+		creditRepository:    creditRepository,
+		rateProvider:        rateProvider,
+		userRepository:      userRepository,
+		notificationService: notificationService,
+		logger:              logger,
 	}
 }
 
@@ -77,6 +88,26 @@ func (s *CreditService) CreateCredit(ctx context.Context, userId int64, req dto.
 	)
 	if err != nil {
 		return nil, mapCreditRepositoryError(err, "failed to create credit")
+	}
+
+	user, userErr := s.userRepository.FindByID(ctx, userId)
+	if userErr != nil {
+		if s.logger != nil {
+			s.logger.Warnf("failed to find user for credit email: %v", userErr)
+		}
+	} else if user != nil {
+		if err := s.notificationService.SendCreditIssuedEmail(
+			ctx,
+			user.Email,
+			req.Amount,
+			req.TermMonths,
+			interestRate,
+			monthlyPayment,
+		); err != nil {
+			if s.logger != nil {
+				s.logger.Warnf("failed to send credit email: %v", err)
+			}
+		}
 	}
 
 	return &dto.CreateCreditResponse{

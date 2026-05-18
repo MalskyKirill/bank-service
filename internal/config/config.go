@@ -26,6 +26,13 @@ type Config struct {
 	CBRURL          string
 	CBRRateMargin   float64
 	CBRLookbackDays int
+
+	SMTPEnabled bool
+	SMTPHost    string
+	SMTPPort    int
+	SMTPUser    string
+	SMTPPass    string
+	SMTPFrom    string
 }
 
 func Load() (*Config, error) {
@@ -42,6 +49,16 @@ func Load() (*Config, error) {
 	}
 
 	cbrLookbackDays, err := getEnvAsInt("CBR_LOOKBACK_DAYS")
+	if err != nil {
+		return nil, err
+	}
+
+	smtpEnabled, err := getEnvAsBool("SMTP_ENABLED")
+	if err != nil {
+		return nil, err
+	}
+
+	smtpPort, err := getEnvAsInt("SMTP_PORT")
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +81,13 @@ func Load() (*Config, error) {
 		CBRURL:          getEnv("CBR_URL"),
 		CBRRateMargin:   cbrRateMargin,
 		CBRLookbackDays: cbrLookbackDays,
+
+		SMTPEnabled: smtpEnabled,
+		SMTPHost:    getEnv("SMTP_HOST"),
+		SMTPPort:    smtpPort,
+		SMTPUser:    getEnv("SMTP_USER"),
+		SMTPPass:    getEnv("SMTP_PASS"),
+		SMTPFrom:    getEnv("SMTP_FROM"),
 	}
 
 	return cfg, nil
@@ -95,4 +119,15 @@ func getEnvAsFloat(key string) (float64, error) {
 	}
 
 	return floatValue, nil
+}
+
+func getEnvAsBool(key string) (bool, error) {
+	value := os.Getenv(key)
+
+	boolValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, fmt.Errorf("invalid value for %s: %w", key, err)
+	}
+
+	return boolValue, nil
 }

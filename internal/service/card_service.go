@@ -10,17 +10,31 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type CardService struct {
-	cardRepository *repository.CardRepository
-	hmacSecret     []byte
+	cardRepository      *repository.CardRepository
+	userRepository      *repository.UserRepository
+	notificationService *NotificationService
+	hmacSecret          []byte
+	logger              *logrus.Logger
 }
 
-func NewCardService(cardRepository *repository.CardRepository, hmacSecret string) *CardService {
+func NewCardService(
+	cardRepository *repository.CardRepository,
+	userRepository *repository.UserRepository,
+	notificationService *NotificationService,
+	hmacSecret string,
+	logger *logrus.Logger,
+) *CardService {
 	return &CardService{
-		cardRepository: cardRepository,
-		hmacSecret:     []byte(hmacSecret),
+		cardRepository:      cardRepository,
+		userRepository:      userRepository,
+		notificationService: notificationService,
+		hmacSecret:          []byte(hmacSecret),
+		logger:              logger,
 	}
 }
 
@@ -160,6 +174,24 @@ func (s *CardService) Pay(ctx context.Context, userId int64, cardId int64, req d
 	account, err := s.cardRepository.Pay(ctx, userId, cardId, req.Amount, description)
 	if err != nil {
 		return nil, mapCardRepositoryError(err, "failed to process card payment")
+	}
+
+	user, userErr := s.userRepository.FindByID(ctx, userId)
+	if userErr != nil {
+		if s.logger != nil {
+			s.logger.Warnf("failed to find user for card payment email: %v", userErr)
+		}
+	} else if user != nil {
+		if err := s.notificationService.SendCardPaymentEmail(
+			ctx,
+			user.Email,
+			req.Amount,
+			description,
+		); err != nil {
+			if s.logger != nil {
+				s.logger.Warnf("failed to send card payment email: %v", err)
+			}
+		}
 	}
 
 	return &dto.CardPaymentResponse{

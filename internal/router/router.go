@@ -14,6 +14,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+
+	smtpintegration "bank-service/internal/integration/smtp"
 )
 
 func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http.Handler {
@@ -25,6 +27,18 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	jwtService := security.NewJWTService(cfg.JWTSecret, cfg.JWTTTLHours)
 	authService := service.NewAuthService(userRepository, jwtService)
 	authHandler := handler.NewAuthHandler(authService, logger)
+
+	smtpClient := smtpintegration.NewClient(
+		cfg.SMTPEnabled,
+		cfg.SMTPHost,
+		cfg.SMTPPort,
+		cfg.SMTPUser,
+		cfg.SMTPPass,
+		cfg.SMTPFrom,
+		logger,
+	)
+
+	notificationService := service.NewNotificationService(smtpClient)
 
 	r.HandleFunc("/register", authHandler.Register).Methods(http.MethodPost)
 	r.HandleFunc("/login", authHandler.Login).Methods(http.MethodPost)
@@ -38,7 +52,13 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
 
 	cardRepository := repository.NewCardRepository(database, cfg.PGPSecret)
-	cardService := service.NewCardService(cardRepository, cfg.HMACSecret)
+	cardService := service.NewCardService(
+		cardRepository,
+		userRepository,
+		notificationService,
+		cfg.HMACSecret,
+		logger,
+	)
 	cardHandler := handler.NewCardHandler(cardService, logger)
 
 	creditRepository := repository.NewCreditRepository(database)
@@ -49,7 +69,13 @@ func NewRouter(database *sql.DB, cfg *config.Config, logger *logrus.Logger) http
 		cfg.CBRLookbackDays,
 	)
 
-	creditService := service.NewCreditService(creditRepository, cbrClient)
+	creditService := service.NewCreditService(
+		creditRepository,
+		cbrClient,
+		userRepository,
+		notificationService,
+		logger,
+	)
 	creditHandler := handler.NewCreditHandler(creditService, logger)
 
 	authRouter := r.PathPrefix("/").Subrouter()

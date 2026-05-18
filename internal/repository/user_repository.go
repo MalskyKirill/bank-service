@@ -101,3 +101,31 @@ func (r *UserRepository) FindByUsername(ctx context.Context, username string) (*
 
 	return &user, nil
 }
+
+func (r *UserRepository) FindByID(ctx context.Context, id int64) (*models.User, error) {
+	query := `
+		SELECT id, email, username, password_hash, created_at
+		FROM users
+		WHERE id = $1
+	`
+
+	var user models.User
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.PasswordHash,
+		&user.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user by id: %w", err)
+	}
+
+	return &user, nil
+}

@@ -44,6 +44,9 @@ func (s *AuthService) Registration(ctx context.Context, req dto.RegisterRequest)
 	if len(username) < 2 {
 		return nil, apperror.New(http.StatusBadRequest, "username must be at least 2 characters")
 	}
+	if len(username) > 50 {
+		return nil, apperror.New(http.StatusBadRequest, "username must not be greater than 50 characters")
+	}
 
 	if password == "" {
 		return nil, apperror.New(http.StatusBadRequest, "password is required")
@@ -52,14 +55,13 @@ func (s *AuthService) Registration(ctx context.Context, req dto.RegisterRequest)
 	if len(password) < 8 {
 		return nil, apperror.New(http.StatusBadRequest, "password must be at least 8 characters")
 	}
+	if len(password) > 72 {
+		return nil, apperror.New(http.StatusBadRequest, "password must not be greater than 72 characters")
+	}
 
-	// existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, email)
-	// if err != nil {
-	// 	return nil, apperror.New(http.StatusInternalServerError, "failed to check email")
-	// }
-	existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, req.Email)
+	existindgUserByEmail, err := s.userRepository.FindByEmail(ctx, email)
 	if err != nil {
-		return nil, apperror.New(http.StatusInternalServerError, err.Error())
+		return nil, apperror.New(http.StatusInternalServerError, "failed to check email")
 	}
 
 	if existindgUserByEmail != nil {
@@ -72,7 +74,7 @@ func (s *AuthService) Registration(ctx context.Context, req dto.RegisterRequest)
 	}
 
 	if existingUserByUserName != nil {
-		return nil, apperror.New(http.StatusInternalServerError, "username already exists")
+		return nil, apperror.New(http.StatusConflict, "username already exists")
 	}
 
 	passwordHash, err := security.HashPassword(password)

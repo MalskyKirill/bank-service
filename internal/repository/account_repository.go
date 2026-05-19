@@ -181,7 +181,7 @@ func (r *AccountRepository) Transfer(ctx context.Context, userId int64, fromAcco
 		return nil, err
 	}
 
-	if fromAccount.ID != userId {
+	if fromAccount.UserID != userId {
 		return nil, ErrAccountForbidden
 	}
 

@@ -166,6 +166,10 @@ func (s *CardService) Pay(ctx context.Context, userId int64, cardId int64, req d
 		return nil, apperror.New(http.StatusBadRequest, "invalid amount")
 	}
 
+	if req.Amount > 10_000_000 {
+		return nil, apperror.New(http.StatusBadRequest, "amount must not be greater than 10000000")
+	}
+
 	description := strings.TrimSpace(req.Description)
 	if description == "" {
 		description = "Card payment"

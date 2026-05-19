@@ -56,6 +56,13 @@ func (s *CreditService) CreateCredit(ctx context.Context, userId int64, req dto.
 		return nil, apperror.New(http.StatusBadRequest, "amount must be greater than zero")
 	}
 
+	if math.IsNaN(req.Amount) || math.IsInf(req.Amount, 0) {
+		return nil, apperror.New(http.StatusBadRequest, "amount must be a finite number")
+	}
+	if req.Amount > 50_000_000 {
+		return nil, apperror.New(http.StatusBadRequest, "amount must not be greater than 50000000")
+	}
+
 	if req.TermMonths <= 0 {
 		return nil, apperror.New(http.StatusBadRequest, "term_months must be greater than zero")
 	}

@@ -7,6 +7,7 @@ import (
 	"bank-service/internal/repository"
 	"context"
 	"errors"
+	"math"
 	"net/http"
 	"strings"
 )
@@ -73,8 +74,12 @@ func (s *AccountService) Deposit(ctx context.Context, userId int64, accountId in
 		return nil, apperror.New(http.StatusBadRequest, "invalid account id")
 	}
 
-	if req.Amount <= 0 {
-		return nil, apperror.New(http.StatusBadRequest, "amount mast be more 0")
+	if !isValidMoneyAmount(req.Amount) {
+		return nil, apperror.New(http.StatusBadRequest, "amount must be a finite positive number with up to 2 decimals")
+	}
+
+	if req.Amount > 10_000_000 {
+		return nil, apperror.New(http.StatusBadRequest, "amount must not be greater than 10000000")
 	}
 
 	account, err := s.accountRepository.Deposit(ctx, userId, accountId, req.Amount)
@@ -97,8 +102,12 @@ func (s *AccountService) Withdraw(ctx context.Context, userId int64, accountId i
 		return nil, apperror.New(http.StatusBadRequest, "invalid account id")
 	}
 
-	if req.Amount <= 0 {
-		return nil, apperror.New(http.StatusBadRequest, "amount mast be more 0")
+	if !isValidMoneyAmount(req.Amount) {
+		return nil, apperror.New(http.StatusBadRequest, "amount must be a finite positive number with up to 2 decimals")
+	}
+
+	if req.Amount > 10_000_000 {
+		return nil, apperror.New(http.StatusBadRequest, "amount must not be greater than 10000000")
 	}
 
 	account, err := s.accountRepository.Withdraw(ctx, userId, accountId, req.Amount)
@@ -125,8 +134,16 @@ func (s *AccountService) Transfer(ctx context.Context, userId int64, req dto.Tra
 		return nil, apperror.New(http.StatusBadRequest, "to_account_id is required")
 	}
 
-	if req.Amount <= 0 {
-		return nil, apperror.New(http.StatusBadRequest, "amount mast be more 0")
+	if req.FromAccountID == req.ToAccountID {
+		return nil, apperror.New(http.StatusBadRequest, "from_account_id and to_account_id must be different")
+	}
+
+	if !isValidMoneyAmount(req.Amount) {
+		return nil, apperror.New(http.StatusBadRequest, "amount must be a finite positive number with up to 2 decimals")
+	}
+
+	if req.Amount > 10_000_000 {
+		return nil, apperror.New(http.StatusBadRequest, "amount must not be greater than 10000000")
 	}
 
 	account, err := s.accountRepository.Transfer(ctx, userId, req.FromAccountID, req.ToAccountID, req.Amount)
@@ -140,6 +157,19 @@ func (s *AccountService) Transfer(ctx context.Context, userId int64, req dto.Tra
 		ToAccountID:    req.ToAccountID,
 		TransferAmount: req.Amount,
 	}, nil
+}
+
+func isValidMoneyAmount(amount float64) bool {
+	if math.IsNaN(amount) || math.IsInf(amount, 0) {
+		return false
+	}
+
+	if amount <= 0 {
+		return false
+	}
+
+	cents := math.Round(amount * 100)
+	return math.Abs(amount-cents/100) < 1e-9
 }
 
 func mapAccountRepositotyError(err error, defaultMessage string) error {

@@ -34,5 +34,5 @@ type PaymentScheduleResponse struct {
 
 type CreateCreditResponse struct {
 	Credit   CreditResponse            `json:"credit"`
-	Schedule []PaymentScheduleResponse `json:"shedule"`
+	Schedule []PaymentScheduleResponse `json:"schedule"`
 }
